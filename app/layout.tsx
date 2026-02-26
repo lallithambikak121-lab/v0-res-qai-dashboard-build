@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
+import { I18nProvider } from '@/lib/i18n/context'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
@@ -37,12 +38,14 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className="font-sans antialiased">
-          {children}
-          <Analytics />
-        </body>
-      </html>
+      <I18nProvider>
+        <html lang="en">
+          <body className="font-sans antialiased">
+            {children}
+            <Analytics />
+          </body>
+        </html>
+      </I18nProvider>
     </ClerkProvider>
   )
 }
