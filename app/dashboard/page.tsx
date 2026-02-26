@@ -9,6 +9,7 @@ import { ShelterTable } from "@/components/dashboard/shelter-table"
 import { QuickAlerts } from "@/components/dashboard/quick-alerts"
 import { ActionPlan } from "@/components/dashboard/action-plan"
 import { WhatIfSimulation } from "@/components/dashboard/what-if-simulation"
+import { useAlerts, useResources } from "@/lib/hooks/use-api"
 import {
   initialResources,
   initialShelters,
@@ -19,7 +20,9 @@ import {
 import type { Resource, ActionStep } from "@/lib/dashboard-store"
 
 export default function DashboardPage() {
-  const { t, alerts, setAlerts } = useDashboard()
+  const { t, setAlerts } = useDashboard()
+  const { alerts: apiAlerts, isLoading: alertsLoading } = useAlerts()
+  const { resources: apiResources, isLoading: resourcesLoading } = useResources()
 
   const [resources, setResources] = useState<Resource[]>(initialResources)
   const [actionSteps, setActionSteps] = useState<ActionStep[]>(initialActionPlan)
@@ -27,6 +30,23 @@ export default function DashboardPage() {
   const [selectedState, setSelectedState] = useState<string | null>("Bihar")
   const [riskScore, setRiskScore] = useState(78)
   const [confidence, setConfidence] = useState(92)
+
+  // Sync API alerts with dashboard context
+  useEffect(() => {
+    if (apiAlerts && apiAlerts.length > 0) {
+      const transformedAlerts = apiAlerts.map((alert: any) => ({
+        id: alert.id,
+        type: alert.type || 'resource',
+        title: alert.title,
+        location: alert.location,
+        detail: alert.description || alert.detail || '',
+        time: new Date(alert.createdAt).toLocaleTimeString(),
+        severity: alert.severity,
+        read: false,
+      }))
+      setAlerts(transformedAlerts)
+    }
+  }, [apiAlerts, setAlerts])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -44,7 +64,7 @@ export default function DashboardPage() {
 
   const handleMarkAlertRead = useCallback((id: string) => {
     setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, read: true } : a)))
-  }, [setAlerts])
+  }, [])
 
   const handleAutoOptimize = useCallback(() => {
     setResources((prev) =>
@@ -109,7 +129,20 @@ export default function DashboardPage() {
 
       {/* Right Sidebar */}
       <div className="hidden xl:flex flex-col gap-4 w-[300px] shrink-0">
-        <QuickAlerts alerts={alerts} onMarkRead={handleMarkAlertRead} t={t} />
+        <QuickAlerts 
+          alerts={apiAlerts && apiAlerts.length > 0 ? apiAlerts.map((alert: any) => ({
+            id: alert.id,
+            type: alert.type || 'resource',
+            title: alert.title,
+            location: alert.location,
+            detail: alert.description || alert.detail || '',
+            time: new Date(alert.createdAt).toLocaleTimeString(),
+            severity: alert.severity,
+            read: false,
+          })) : []} 
+          onMarkRead={handleMarkAlertRead} 
+          t={t} 
+        />
         <ActionPlan
           steps={actionSteps}
           onToggleStep={handleToggleStep}

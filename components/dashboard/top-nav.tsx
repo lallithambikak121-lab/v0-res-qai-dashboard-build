@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { UserButton } from "@clerk/nextjs"
 import {
   Search,
   Globe,
@@ -187,6 +188,17 @@ export function TopNav({
           <Shield className="w-4 h-4 text-primary" />
           <span>{t.commandCenter}</span>
         </button>
+
+        {/* User Button */}
+        <UserButton
+          appearance={{
+            elements: {
+              userButtonBox: "flex-row-reverse",
+              userButtonTrigger: "focus:shadow-none",
+            },
+          }}
+          afterSignOutUrl="/login"
+        />
       </div>
     </header>
   )
